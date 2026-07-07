@@ -3,19 +3,24 @@ import config from '../configs/app.config'
 
 const redisUrl = config.get('pub_sub_redis_db.url')
 
-const connection = redisUrl ? redisUrl : {
+const retryStrategy = (times) => {
+  if (times >= 3) {
+    console.warn('Redis connection failed 3 times. Disabling reconnects to prevent log spam.');
+    return null; // Stop retrying
+  }
+  return Math.min(times * 500, 2000);
+};
+
+const connectionOptions = {
   host: config.get('pub_sub_redis_db.host'),
   port: config.get('pub_sub_redis_db.port'),
-  password: config.get('pub_sub_redis_db.password')
-  // TLS enabled, but CA verification disabled
-  // tls: {
-  //   rejectUnauthorized: false,
-  // },
-}
+  password: config.get('pub_sub_redis_db.password'),
+  retryStrategy
+};
 
-const publisherClient = new Redis(connection)
-const subscriberClient = new Redis(connection)
-const client = new Redis(connection)
+const publisherClient = redisUrl ? new Redis(redisUrl, { retryStrategy }) : new Redis(connectionOptions)
+const subscriberClient = redisUrl ? new Redis(redisUrl, { retryStrategy }) : new Redis(connectionOptions)
+const client = redisUrl ? new Redis(redisUrl, { retryStrategy }) : new Redis(connectionOptions)
 
 // Common function to handle connection events
 const handleRedisEvents = (client, name) => {
