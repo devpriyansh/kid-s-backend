@@ -52,7 +52,7 @@ handleRedisEvents(client, 'Client')
 
 // Export the clients
 export default {
-  connection,
+  connection: connectionOptions,
   publisherClient,
   subscriberClient,
   client
