@@ -511,3 +511,7 @@ HIT /api route: GET /v1/parent/dashboard
 HIT /api route: GET /v1/quiz/list/nursery
 HIT /api route: GET /v1/quiz/list/nursery
 HIT /api route: PUT /v1/user/api-key
+HIT /api route: POST /v1/user/login
+HIT /api route: GET /v1/parent/dashboard
+HIT /api route: GET /v1/parent/dashboard
+HIT /api route: GET /v1/parent/dashboard

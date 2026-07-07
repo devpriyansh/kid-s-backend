@@ -146,6 +146,12 @@ const config = convict({
   },
 
   pub_sub_redis_db: {
+    url: {
+      doc: 'Redis full URL',
+      format: String,
+      default: '',
+      env: 'REDIS_URL'
+    },
     password: {
       doc: 'Redis Database password',
       format: '*',

@@ -1,7 +1,9 @@
 import Redis from 'ioredis'
 import config from '../configs/app.config'
 
-const connection = {
+const redisUrl = config.get('pub_sub_redis_db.url')
+
+const connection = redisUrl ? redisUrl : {
   host: config.get('pub_sub_redis_db.host'),
   port: config.get('pub_sub_redis_db.port'),
   password: config.get('pub_sub_redis_db.password')
@@ -10,6 +12,7 @@ const connection = {
   //   rejectUnauthorized: false,
   // },
 }
+
 const publisherClient = new Redis(connection)
 const subscriberClient = new Redis(connection)
 const client = new Redis(connection)
