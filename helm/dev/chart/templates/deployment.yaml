@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.userMobileBackend.name }}
+  namespace: {{ .Values.userMobileBackend.namespace }}
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: {{ .Values.userMobileBackend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.userMobileBackend.name }}
+    spec:
+      serviceAccountName: {{ .Values.userMobileBackend.name }}
+      containers:
+        - name: node
+          image: {{ .Values.userMobileBackend.image }}:{{ .Values.userMobileBackend.tag }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8082
+            - containerPort: 9090
+              name: metrics
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.userMobileBackend.dbSecret }}
+                  key: host
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.userMobileBackend.dbSecret }}
+                  key: user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.userMobileBackend.dbSecret }}
+                  key: password
+            - name: PUB_SUB_REDIS_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: host
+            # - name: REDIS_DB_PASSWORD
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: redis-secret
+            #       key: password
+          {{- toYaml $.Values.userMobileBackend.env | nindent 12 }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.userMobileBackend.name }}-{{ .Values.userMobileBackend.secretName }}
+          resources:
+            requests:
+              memory: "{{ .Values.userMobileBackend.resources.requests.memory }}"
+              cpu: "{{ .Values.userMobileBackend.resources.requests.cpu }}"
+            limits:
+              memory: "{{ .Values.userMobileBackend.resources.limits.memory }}"
+              cpu: "{{ .Values.userMobileBackend.resources.limits.cpu }}"
+      {{- with .Values.userMobileBackend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.userMobileBackend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.userMobileBackend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+          # livenessProbe:
+          #   httpGet:
+          #     path: /healthz
+          #     port: 8080
+          #   initialDelaySeconds: 1
+          #   periodSeconds: 3
+          # readinessProbe:
+          #   httpGet:
+          #     path: /healthz
+          #     port: 8080
+          #   initialDelaySeconds: 3
+          #   timeoutSeconds: 1
+

@@ -1,0 +1,156 @@
+include:
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+
+image:
+  name: alpine/azure_cli:latest
+before_script:
+  - apk update
+  - apk add --no-cache docker git curl bash
+  - git remote remove origin
+  - git remote add origin https://oauth2:$OAUTH_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_PATH.git
+
+stages:
+  - test
+  - build
+  - deploy_az_dev
+  - deploy_az_stg
+  - deploy_az_prod
+
+.app_deploy_env:
+  script:
+    - DEPLOY_PATH=$(echo $CI_ENVIRONMENT_NAME | tr "-" "/")
+    - cd helm/${DEPLOY_PATH}/env
+    - echo "Updating "tag" in values.tf"
+    - git config --global user.email "${GIT_USER_EMAIL:-$GITLAB_USER_EMAIL}"
+    - git config --global user.name "${GIT_USER_NAME:-$GITLAB_USER_NAME}"
+    - git fetch origin
+    - git checkout "${CI_COMMIT_REF_NAME}"
+    - git pull origin "${CI_COMMIT_REF_NAME}" --no-rebase
+    - sed -i "s/\(tag:\s*\)\"[^\"]*\"/\1\"$CI_COMMIT_SHORT_SHA\"/" values.yaml
+    - git add . && git commit -m "chore(promote) $CI_ENVIRONMENT_NAME to $CI_COMMIT_SHORT_SHA [skip ci]"
+    - git push origin "${CI_COMMIT_REF_NAME}" -o ci.skip
+
+.helm_deploy_env:
+  script:
+    - echo "Promoting helm chart changes"
+    - git config --global user.email "${GIT_USER_EMAIL:-$GITLAB_USER_EMAIL}"
+    - git config --global user.name "${GIT_USER_NAME:-$GITLAB_USER_NAME}"
+    - git fetch origin
+    - git checkout "${CI_COMMIT_REF_NAME}"
+    - git pull origin "${CI_COMMIT_REF_NAME}" --no-rebase
+    - echo $CI_ENVIRONMENT_NAME
+    - DEPLOY_PATH=$(echo $CI_ENVIRONMENT_NAME | tr "-" "/")
+    - rm -rf helm/${DEPLOY_PATH}/chart
+    - mkdir -p helm/${DEPLOY_PATH}/chart
+    - cp -a helm/az/dev/chart/. helm/${DEPLOY_PATH}/chart
+    - git add . && git commit -m "chore(promote) Helm chart changes [skip ci]"
+    - git push origin "${CI_COMMIT_REF_NAME}" -o ci.skip
+
+variables:
+  APP: "dfs-user-mobile-backend"
+  AZURE_CLIENT_ID: "51c90ad4-2a22-4776-9509-5e4a52af5c37"
+  AZURE_TENANT_ID: "bdbac842-4e96-42a9-9378-2ede9b82dc3b"
+  DEV_ACR: oakridgedevueacr.azurecr.io
+  PROD_ACR: oakridgeprodcuacr.azurecr.io
+  PROD_SUBSCRIPTION: "8487ea20-f7b3-4178-95cc-42022dbe53b4"
+
+build:
+  stage: build
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  services:
+    - docker:20.10.16-dind
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: "https://gitlab.com"
+  script:
+    - echo "Building Docker image with tag $CI_COMMIT_SHORT_SHA"
+    - docker build -t ${DEV_ACR}/${APP}:$CI_COMMIT_SHORT_SHA .
+    - echo "Pushing Docker image to ACR."
+    - az login --service-principal -u $AZURE_CLIENT_ID -t $AZURE_TENANT_ID --federated-token $GITLAB_OIDC_TOKEN
+    - az acr login --name $DEV_ACR
+    - docker push ${DEV_ACR}/${APP}:$CI_COMMIT_SHORT_SHA
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE == "push"'
+
+deploy_az_dev:
+  stage: deploy_az_dev
+  allow_failure: false
+  dependencies:
+    - build
+  environment:
+    name: az-dev
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: "https://gitlab.com"
+  script:
+    - !reference [.app_deploy_env, script]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE == "push"'
+
+deploy_az_stg:
+  stage: deploy_az_stg
+  allow_failure: false
+  dependencies:
+    - build
+  environment:
+    name: az-stg
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: "https://gitlab.com"
+  script:
+    - !reference [.app_deploy_env, script]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE == "push"'
+
+helm_deploy_stg:
+  stage: deploy_az_stg
+  allow_failure: false
+  dependencies:
+    - build
+  environment:
+    name: az-stg
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: "https://gitlab.com"
+  script:
+    - !reference [.helm_deploy_env, script]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE == "push"'
+      changes:
+        paths:
+          - helm/az/stg/chart/**/*
+
+deploy_az_prod:
+  stage: deploy_az_prod
+  when: manual
+  allow_failure: false
+  dependencies:
+    - build
+    - deploy_az_stg
+  environment:
+    name: az-prod
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  services:
+    - docker:20.10.16-dind
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: "https://gitlab.com"
+  script:
+    - az login --service-principal -u $AZURE_CLIENT_ID -t $AZURE_TENANT_ID --federated-token $GITLAB_OIDC_TOKEN
+    - echo "Pulling Docker image from dev ACR"
+    - az acr login --name $DEV_ACR
+    - docker pull ${DEV_ACR}/${APP}:$CI_COMMIT_SHORT_SHA
+    - echo "Tagging Docker image with tag $CI_COMMIT_SHORT_SHA"
+    - docker tag ${DEV_ACR}/${APP}:$CI_COMMIT_SHORT_SHA ${PROD_ACR}/${APP}:$CI_COMMIT_SHORT_SHA
+    - echo "Pushing Docker image to $PROD_ACR."
+    - az account set --subscription $PROD_SUBSCRIPTION
+    - az acr login --name $PROD_ACR
+    - docker push ${PROD_ACR}/${APP}:$CI_COMMIT_SHORT_SHA
+    - !reference [.app_deploy_env, script]
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "release" && $CI_PIPELINE_SOURCE == "push"'

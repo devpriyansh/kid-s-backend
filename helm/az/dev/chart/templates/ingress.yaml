@@ -1,0 +1,34 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Values.userMobileBackend.name }}
+  namespace: {{ .Values.userMobileBackend.namespace }}
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    external-dns.alpha.kubernetes.io/hostname: api.{{ .Values.userMobileBackend.domain }}
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-headers: content-type,x-user-agent,accept,authorization,connect-protocol-version
+    nginx.ingress.kubernetes.io/cors-allow-methods: GET, PUT, POST, DELETE, PATCH, OPTIONS
+    nginx.ingress.kubernetes.io/cors-allow-origin: https://api.{{ .Values.userMobileBackend.domain }}
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/secure-backends: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.{{ .Values.userMobileBackend.domain }}
+      secretName: api-tls
+  rules:
+  - host: api.{{ .Values.userMobileBackend.domain }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.userMobileBackend.name }}
+            port:
+              number: 80

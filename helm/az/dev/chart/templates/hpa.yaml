@@ -1,0 +1,34 @@
+{{- if and .Values.userMobileBackend.hpa .Values.userMobileBackend.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.userMobileBackend.name }}-hpa
+  namespace: {{ .Values.userMobileBackend.namespace }}
+  labels:
+    app: {{ .Values.userMobileBackend.name }}
+    component: hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.userMobileBackend.name }}
+  minReplicas: {{ .Values.userMobileBackend.hpa.minReplicas }}
+  maxReplicas: {{ .Values.userMobileBackend.hpa.maxReplicas }}
+  metrics:
+    {{- if .Values.userMobileBackend.hpa.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.userMobileBackend.hpa.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.userMobileBackend.hpa.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.userMobileBackend.hpa.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

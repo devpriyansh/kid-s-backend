@@ -1,0 +1,6 @@
+{
+  "USER_NOT_FOUND": "ユーザーが見つかりません",
+  "EMAIL_NOT_VERIFIED": "「メールが確認されていません」",
+  "WRONG_PASSWORD": "「間違ったパスワード",
+  "INVALID_USERNAME_OR_EMAIL": "「無効なユーザー名またはメールアドレス」"
+}

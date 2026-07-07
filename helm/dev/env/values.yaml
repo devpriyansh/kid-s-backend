@@ -1,0 +1,74 @@
+userMobileBackend:
+  image: 207482997373.dkr.ecr.us-east-1.amazonaws.com/dfs-user-mobile-backend
+  tag:                                                                                                                  "10f67139"
+  region: use1
+  environment: dev
+  tenant: dfs
+  namespace: dfs-dev
+  # Secrets
+  awsSecretName: app/oakridge-dev/dfs-dev/user-mobile-backend
+  iamRole: arn:aws:iam::207482997373:role/user-mobile-backend
+  # Ingress
+  awsCertArn: arn:aws:acm:us-east-1:207482997373:certificate/3942576a-2d7c-4333-9e5d-931a8350d279
+  awsAlbSubnets: subnet-0fb5467ea79c353c3,subnet-00ff87994b4ea0aef
+  awsAlbInternalSubnets: subnet-0acf9e2e18ae39275,subnet-08fec1c5e1af93ef7
+  awsAlbGroupName: dfs-dev
+  domain: dfs.use1.dev.eazy6sports.com
+
+  env:
+  - name: NODE_ENV
+    value: "development"
+  - name: PORT
+    value: "8082"
+  - name: AUTOMATIC_TRANSACTIONS
+    value: "true"
+  - name: DB_PORT
+    value: "5432"
+  - name: DB_NAME
+    value: "eazy6"
+  - name: PUB_SUB_REDIS_DB_PORT
+    value: "6379"
+  - name: LOG_LEVEL
+    value: "debug"
+  - name: ZOHO_BASE_URL
+    value: "https://www.zohoapis.com/crm/v2"
+  - name: ZOHO_TOKEN_URL
+    value: "https://accounts.zoho.com/oauth/v2/token"
+  - name: ZOHO_CLIENT_ID
+    value: "1000.RIUWZA73LUTRV2ANMS7L9AP2Z1DAEI"
+  - name: ZOHO_REDIRECT_URI
+    value: "https://www.google.com/"
+  - name: JWT_LOGIN_TOKEN_EXPIRY
+    value: "2d"
+  - name: VERIFICATION_TOKEN_EXPIRY
+    value: "120s"
+  - name: JWT_REFRESH_TOKEN_EXPIRY
+    value: "7d"
+  - name: JWT_EXTENDED_REFRESH_TOKEN_EXPIRY
+    value: "30d"
+  - name: AWS_REGION
+    value: "us-east-1"
+  - name: AWS_S3_BUCKET
+    value: "oakridge-dev-dfs-dev-ljh9ojrny2ihjutq"
+  - name: MAIL_FROM_NAME
+    value: "Eazy6"
+  - name: MAIL_FROM_ADDRESS
+    value: "misko@oakridgeinteractive.com"
+  - name: MAIL_ENCRYPTION
+    value: "tls"
+  - name: MAIL_USERNAME
+    value: "misko@oakridgeinteractive.com"
+  - name: MAIL_PORT
+    value: "587"
+  - name: MAIL_HOST
+    value: "smtp-relay.brevo.com"
+  - name: MAIL_MAILER
+    value: "smtp"
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"

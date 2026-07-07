@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.userMobileBackend.name }}
+  namespace: {{ .Values.userMobileBackend.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Values.userMobileBackend.name }}
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8082
+    - name: metrics
+      port: 9090
+      protocol: TCP
+      targetPort: 9090

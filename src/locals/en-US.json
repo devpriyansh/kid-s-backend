@@ -1,0 +1,7 @@
+{
+	"USER_NOT_FOUND": "User not found",
+	"EMAIL_NOT_VERIFIED": "Email not verified",
+	"WRONG_PASSWORD": "Wrong password",
+	"INVALID_USERNAME_OR_EMAIL": "Invalid username or email",
+	"ADMIN_NOT_FOUND": "ADMIN_NOT_FOUND"
+}

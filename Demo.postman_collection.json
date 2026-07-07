@@ -1,0 +1,38 @@
+{
+	"info": {
+		"_postman_id": "28205ecf-28a1-45a6-92d2-a9461446ab2d",
+		"name": "Demo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24902288"
+	},
+	"item": [
+		{
+			"name": "get_demo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/v1/demo/hello?name=Dummy User",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"demo",
+						"hello"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "Dummy User"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

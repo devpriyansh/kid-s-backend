@@ -1,0 +1,6 @@
+{
+  "USER_NOT_FOUND": "Utilisateur introuvable",
+  "EMAIL_NOT_VERIFIED": "Adresse E-mail non vérifiée",
+  "WRONG_PASSWORD": "Mot de passe incorrect",
+  "INVALID_USERNAME_OR_EMAIL": "Pseudo invalide"
+}

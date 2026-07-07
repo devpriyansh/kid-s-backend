@@ -1,0 +1,5 @@
+userMobileBackend:
+  name: user-mobile-backend
+  secretName: app-credentials
+  dbSecret: db-secret
+  relicas: 1

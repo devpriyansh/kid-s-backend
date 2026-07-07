@@ -1,0 +1,15 @@
+# apiVersion: monitoring.coreos.com/v1
+# kind: ServiceMonitor
+# metadata:
+#   name: user-mobile-backend-metrics
+#   namespace: <prometheus-operator-namespace>
+#   labels:
+#     team: backend
+# spec:
+#   selector:
+#     matchLabels:
+#       app: user-mobile-backend
+#   endpoints:
+#   - port: metrics
+#     path: /metrics
+#     interval: 30s

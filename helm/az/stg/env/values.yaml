@@ -1,0 +1,121 @@
+userMobileBackend:
+  image: oakridgedevueacr.azurecr.io/dfs-user-mobile-backend
+  tag: "99cc3e43"
+  region: use1
+  environment: stg
+  tenant: dfs
+  namespace: dfs-stg
+  serviceAccountClientId: 56b7aa72-ebc6-4b0b-a87a-3dfaa247f97f
+
+  domain: stg.az.eazy6sports.com
+  replicas: 2
+
+  env:
+    - name: NODE_ENV
+      value: "development"
+    - name: PORT
+      value: "8082"
+    - name: AUTOMATIC_TRANSACTIONS
+      value: "true"
+    - name: DB_PORT
+      value: "5432"
+    - name: DB_NAME
+      value: "eazy6"
+    - name: PUB_SUB_REDIS_DB_PORT
+      value: "6379"
+    - name: LOG_LEVEL
+      value: "debug"
+    - name: ZOHO_BASE_URL
+      value: "https://www.zohoapis.com/crm/v2"
+    - name: ZOHO_TOKEN_URL
+      value: "https://accounts.zoho.com/oauth/v2/token"
+    - name: ZOHO_CLIENT_ID
+      value: "1000.RIUWZA73LUTRV2ANMS7L9AP2Z1DAEI"
+    - name: ZOHO_REDIRECT_URI
+      value: "https://www.google.com/"
+    - name: JWT_LOGIN_TOKEN_EXPIRY
+      value: "2d"
+    - name: VERIFICATION_TOKEN_EXPIRY
+      value: "120s"
+    - name: JWT_REFRESH_TOKEN_EXPIRY
+      value: "7d"
+    - name: JWT_EXTENDED_REFRESH_TOKEN_EXPIRY
+      value: "30d"
+    - name: AWS_REGION
+      value: "us-east-1"
+    - name: AWS_S3_BUCKET
+      value: "oakridge-dev-dfs-dev-ljh9ojrny2ihjutq"
+    - name: MAIL_FROM_NAME
+      value: "Eazy6"
+    - name: MAIL_FROM_ADDRESS
+      value: "misko@oakridgeinteractive.com"
+    - name: MAIL_ENCRYPTION
+      value: "tls"
+    - name: MAIL_USERNAME
+      value: "misko@oakridgeinteractive.com"
+    - name: MAIL_PORT
+      value: "587"
+    - name: MAIL_HOST
+      value: "smtp-relay.brevo.com"
+    - name: MAIL_MAILER
+      value: "smtp"
+    - name: AZURE_CLIENT_ID
+      value: "276c38f8-de07-40d1-838f-6c74711201cc"
+    - name: AZURE_TENANT_ID
+      value: "bdbac842-4e96-42a9-9378-2ede9b82dc3b"
+    - name: AZURE_FEDERATED_TOKEN_FILE
+      value: /var/run/secrets/azure/tokens/azure-identity-token
+    - name: AZURE_AUTHORITY_HOST
+      value: https://login.microsoftonline.com/
+    - name: AZURE_STORAGE_ACCOUNT_NAME
+      value: "appraphiikp"
+    - name: AZURE_CONTAINER_NAME
+      value: "oakridgedevuecontainer"
+    - name: GOOGLE_CLIENT_ID
+      value: "1096486377439-pueaq18rn8831div5946p47qtahho78n.apps.googleusercontent.com"
+    - name: APPLE_BUNDLE_ID
+      value: "com.eazy6"
+    - name: APP_ATTEST_BUNDLE_ID
+      value: "com.eazy6dev"
+    - name: TANGO_BASE_URL
+      value: "https://integration-api.tangocard.com/raas/v2"
+  livenessProbe:
+    httpGet:
+      path: /health-check
+      port: 8082
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /health-check
+      port: 8082
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "2Gi"
+      cpu: "500m"
+
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: user-mobile-backend
+          topologyKey: kubernetes.io/hostname
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                app: user-mobile-backend
+            topologyKey: topology.kubernetes.io/zone
