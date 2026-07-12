@@ -55,6 +55,10 @@ export default (sequelize, DataTypes) => {
       foreignKey: 'quiz_id',
       as: 'activities'
     })
+    Quiz.hasMany(models.ChildGameProgress, {
+      foreignKey: 'quiz_id',
+      as: 'gameProgress'
+    })
   }
 
   return Quiz

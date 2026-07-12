@@ -1,7 +1,7 @@
 'use strict'
 export default (sequelize, DataTypes) => {
-  const Child = sequelize.define(
-    'Child',
+  const ChildGameProgress = sequelize.define(
+    'ChildGameProgress',
     {
       id: {
         autoIncrement: true,
@@ -10,37 +10,28 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
         primaryKey: true
       },
-      user_id: {
+      child_id: {
         type: DataTypes.BIGINT,
         allowNull: false
       },
-      name: {
-        type: DataTypes.STRING,
+      quiz_id: {
+        type: DataTypes.BIGINT,
         allowNull: false
       },
-      age_group: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        comment: 'nursery, kg1, kg2'
-      },
-      avatar: {
-        type: DataTypes.STRING,
-        allowNull: true
-      },
-      total_stars: {
+      times_played: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0
       },
-      total_coins: {
+      best_score: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0
       },
-      level: {
-        type: DataTypes.INTEGER,
+      completed: {
+        type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: 1
+        defaultValue: false
       },
       createdAt: {
         type: DataTypes.DATE,
@@ -56,25 +47,21 @@ export default (sequelize, DataTypes) => {
     {
       sequelize,
       underscored: true,
-      tableName: 'children',
+      tableName: 'child_game_progress',
       timestamps: true
     }
   )
 
-  Child.associate = function (models) {
-    Child.belongsTo(models.User, {
-      foreignKey: 'user_id',
-      as: 'parent'
-    })
-    Child.hasMany(models.ActivityResult, {
+  ChildGameProgress.associate = function (models) {
+    ChildGameProgress.belongsTo(models.Child, {
       foreignKey: 'child_id',
-      as: 'activities'
+      as: 'child'
     })
-    Child.hasMany(models.ChildGameProgress, {
-      foreignKey: 'child_id',
-      as: 'gameProgress'
+    ChildGameProgress.belongsTo(models.Quiz, {
+      foreignKey: 'quiz_id',
+      as: 'quiz'
     })
   }
 
-  return Child
+  return ChildGameProgress
 }

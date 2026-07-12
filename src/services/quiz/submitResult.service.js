@@ -6,8 +6,8 @@ import { createNewEntity } from '../../helpers/crud'
 const schema = {
   type: 'object',
   properties: {
-    childId: { type: 'number' },
-    quizId: { type: 'number' },
+    childId: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+    quizId: { anyOf: [{ type: 'number' }, { type: 'string' }] },
     score: { type: 'number' },
     starsEarned: { type: 'number' },
     coinsEarned: { type: 'number' }
@@ -39,6 +39,25 @@ export default class SubmitResult extends serviceBase {
         },
         transaction: t
       })
+
+      // Upsert ChildGameProgress
+      const [gameProgress] = await db.ChildGameProgress.findOrCreate({
+        where: { child_id: childId, quiz_id: quizId },
+        defaults: {
+          child_id: childId,
+          quiz_id: quizId,
+          times_played: 0,
+          best_score: 0,
+          completed: false
+        },
+        transaction: t
+      })
+
+      await gameProgress.update({
+        times_played: gameProgress.times_played + 1,
+        best_score: Math.max(gameProgress.best_score, score),
+        completed: true
+      }, { transaction: t })
 
       // Update child totals
       const child = await db.Child.findByPk(childId, { transaction: t })

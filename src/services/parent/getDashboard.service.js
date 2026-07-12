@@ -38,12 +38,21 @@ export default class GetDashboard extends serviceBase {
         limit: 10
       })
 
+      const gameProgress = await db.ChildGameProgress.findAll({
+        where: { child_id: childIds },
+        include: [
+          { model: db.Quiz, as: 'quiz' }
+        ],
+        order: [['updated_at', 'DESC']]
+      })
+
       return {
         message: 'Dashboard fetched successfully!',
         status: 200,
         result: {
           children: children.map(c => c.toJSON()),
-          recentActivities: recentActivities.map(a => a.toJSON())
+          recentActivities: recentActivities.map(a => a.toJSON()),
+          gameProgress: gameProgress.map(g => g.toJSON())
         }
       }
     } catch (error) {
