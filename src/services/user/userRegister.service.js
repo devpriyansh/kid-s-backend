@@ -3,6 +3,7 @@ import serviceBase from '../../libs/serviceBase'
 import ajv from '../../libs/ajv'
 import { encryptPassword, generateRandomUserName } from '../../utils/common.util'
 import { createNewEntity, getOne } from '../../helpers/crud'
+import { memoryStore } from '../../libs/memoryStore'
 
 const schema = {
   type: 'object',
@@ -32,6 +33,12 @@ export default class UserRegister extends serviceBase {
         return this.addError('PasswordMismatchErrorType', 'Passwords don’t match.')
       }
 
+      // Check if email was verified
+      const isVerified = memoryStore.get(`verified:${email.toLowerCase()}`)
+      if (!isVerified) {
+        return this.addError('EmailNotVerifiedErrorType', 'Email address has not been verified. Please verify your email first.')
+      }
+
       const existingUser = await getOne({
         model: db.User,
         data: { email: email.toLowerCase() },
@@ -59,6 +66,9 @@ export default class UserRegister extends serviceBase {
         data: newUser,
         transaction: t
       })
+
+      // Clean up verification flag
+      memoryStore.del(`verified:${email.toLowerCase()}`)
 
       delete createUser.password
 

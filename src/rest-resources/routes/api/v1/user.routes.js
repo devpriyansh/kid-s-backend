@@ -42,8 +42,23 @@ userRoutes.route('/register').post(
   responseValidationMiddleware(standardResponseSchema)
 )
 
+userRoutes.route('/send-otp').post(
+  UserController.sendOtp,
+  responseValidationMiddleware(standardResponseSchema)
+)
+
+userRoutes.route('/verify-otp').post(
+  UserController.verifyOtp,
+  responseValidationMiddleware(standardResponseSchema)
+)
+
 userRoutes.route('/login').post(
   UserController.login,
+  responseValidationMiddleware(standardResponseSchema)
+)
+
+userRoutes.route('/google-login').post(
+  UserController.googleLogin,
   responseValidationMiddleware(standardResponseSchema)
 )
 

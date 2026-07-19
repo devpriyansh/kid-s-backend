@@ -5,12 +5,45 @@ import Logout from '../../services/user/logout.service'
 import ResetPassword from '../../services/user/resetPassword.service'
 import UpdateApiKey from '../../services/user/updateApiKey.service'
 import GetApiKeyStatus from '../../services/user/getApiKeyStatus.service'
+import GoogleLogin from '../../services/user/googleLogin.service'
+import sendVerificationOtp from '../../services/user/sendVerificationOtp.service'
+import verifyOtp from '../../services/user/verifyOtp.service'
 
 export default class UserController {
   static async register (req, res, next) {
     console.log('HIT UserController.register!')
     try {
       const { result, successful, errors } = await UserRegister.execute(
+        req.body,
+        req.context
+      )
+      sendResponse(
+        { req, res, next },
+        { result, successful, serviceErrors: errors }
+      )
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async sendOtp (req, res, next) {
+    try {
+      const { result, successful, errors } = await sendVerificationOtp.execute(
+        req.body,
+        req.context
+      )
+      sendResponse(
+        { req, res, next },
+        { result, successful, serviceErrors: errors }
+      )
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async verifyOtp (req, res, next) {
+    try {
+      const { result, successful, errors } = await verifyOtp.execute(
         req.body,
         req.context
       )
@@ -36,6 +69,21 @@ export default class UserController {
           castleDeviceId,
           ip: req.ip
         },
+        req.context
+      )
+      sendResponse(
+        { req, res, next },
+        { result, successful, serviceErrors: errors }
+      )
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  static async googleLogin (req, res, next) {
+    try {
+      const { result, successful, errors } = await GoogleLogin.execute(
+        req.body,
         req.context
       )
       sendResponse(
